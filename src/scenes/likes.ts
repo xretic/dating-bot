@@ -71,7 +71,17 @@ export const likes = new Scenes.BaseScene<CustomContext>("likes")
 		});
 
 		if (checkLike) {
-			await reciprocitySend(ctx, user, likeForm, userLike.id, checkLike.id);
+			await reciprocitySend(ctx, [
+				{
+					user: user,
+					likeId: userLike.id,
+				},
+
+				{
+					user: likeForm,
+					likeId: checkLike.id,
+				},
+			]);
 		}
 
 		[user, pagination, likeForm] = await getCurrectForm(ctx);

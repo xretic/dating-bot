@@ -5,57 +5,50 @@ import checkUsername from "./checkUsername";
 
 export default async function (
 	ctx: CustomContext,
-	user: Form,
-	mutual: Form,
-	userLikeId: string,
-	mutualLikeId: string
+	users: { user: Form; likeId: string }[]
 ): Promise<void> {
-	const [telegramUser, mutualUser] = await Promise.all([
-		await ctx.telegram.getChatMember(
-			Number(user.chat_id),
-			Number(user.chat_id)
-		),
+	const chatMembers = await Promise.all(
+		users.map(async (x) => {
+			return await ctx.telegram.getChatMember(
+				Number(x.user.chat_id),
+				Number(x.user.chat_id)
+			);
+		})
+	);
 
-		await ctx.telegram.getChatMember(
-			Number(mutual.chat_id),
-			Number(mutual.chat_id)
-		),
-	]);
-
-	const [userCheck, mutualCheck] = await Promise.all([
-		await checkUsername(ctx, Number(user.chat_id), telegramUser),
-		await checkUsername(ctx, Number(mutual.chat_id), mutualUser),
-	]);
-
-	if ([userCheck, mutualCheck].some((x) => x === 403)) {
-		return;
+	for (let i = 0; i < 2; i++) {
+		await checkUsername(ctx, Number(users[i - 1]), chatMembers[i - 1]);
 	}
 
-	await ctx.telegram.sendMessage(
-		Number(user.chat_id),
-		`*У вас взаимный лайк! Можете начинать общение -* @${mutualUser.user.username}`,
-		{
-			parse_mode: "Markdown",
-		}
-	);
+	for (const user of users) {
+		const chatMember = chatMembers.filter(
+			(x) => x.user.id === Number(user.user.telegram_user_id)
+		)[0];
 
-	await ctx.telegram.sendMessage(
-		Number(mutual.chat_id),
-		`*У вас взаимный лайк! Можете начинать общение -* @${telegramUser.user.username}`,
-		{
-			parse_mode: "Markdown",
-		}
-	);
+		const checkResult = await checkUsername(
+			ctx,
+			Number(user.user.chat_id),
+			chatMember
+		);
 
-	await prisma.like.delete({
-		where: {
-			id: userLikeId,
-		},
-	});
+		if (checkResult === 403) return;
 
-	await prisma.like.delete({
-		where: {
-			id: mutualLikeId,
-		},
-	});
+		const mutualMember = chatMembers.filter(
+			(x) => x.user.id !== Number(user.user.telegram_user_id)
+		)[0];
+
+		await ctx.telegram.sendMessage(
+			Number(user.user.chat_id),
+			`*У вас взаимный лайк! Можете начинать общение -* @${mutualMember.user.username}`,
+			{
+				parse_mode: "Markdown",
+			}
+		);
+
+		await prisma.like.delete({
+			where: {
+				id: user.likeId,
+			},
+		});
+	}
 }

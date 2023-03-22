@@ -102,13 +102,17 @@ export const search = new Scenes.BaseScene<CustomContext>("search")
 		});
 
 		if (checkLike) {
-			await reciprocitySend(
-				ctx,
-				user,
-				searched[activeSearch.pagination - 1],
-				userLike.id,
-				checkLike.id
-			);
+			await reciprocitySend(ctx, [
+				{
+					user: user,
+					likeId: userLike.id,
+				},
+
+				{
+					user: searched[activeSearch.pagination - 1],
+					likeId: checkLike.id,
+				},
+			]);
 		}
 
 		if (!searched[activeSearch.pagination]) {
