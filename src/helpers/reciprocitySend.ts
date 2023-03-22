@@ -17,7 +17,7 @@ export default async function (
 	);
 
 	for (let i = 0; i < 2; i++) {
-		await checkUsername(ctx, Number(users[i - 1]), chatMembers[i - 1]);
+		await checkUsername(ctx, Number(users[i]), chatMembers[i]);
 	}
 
 	for (const user of users) {
