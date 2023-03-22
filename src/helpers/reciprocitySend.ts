@@ -8,8 +8,8 @@ export default async function (
 	users: { user: Form; likeId: string }[]
 ): Promise<void> {
 	const chatMembers = await Promise.all(
-		users.map(async (x) => {
-			return await ctx.telegram.getChatMember(
+		users.map((x) => {
+			return ctx.telegram.getChatMember(
 				Number(x.user.chat_id),
 				Number(x.user.chat_id)
 			);
