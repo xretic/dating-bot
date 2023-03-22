@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Form {
+  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  telegram_user_id BigInt @unique
+  chat_id          BigInt @unique
+  name             String
+  age              Int
+  description      String
+  views            BigInt @default(0)
+  likes            BigInt @default(0)
+}
+
+model ActiveSearch {
+  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  telegram_user_id BigInt @unique
+  likes_pagination Int    @default(0)
+  pagination       Int    @default(0)
+}
+
+model Like {
+  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  telegram_user_id BigInt
+  form_id          String @db.ObjectId
+}
